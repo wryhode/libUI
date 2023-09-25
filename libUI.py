@@ -91,10 +91,11 @@ class Application():
     
     class Button(Sprite):
         def __init__(self,rect,parent):
-            self.rect = rect
-            self.parent = parent
+            Application.Sprite.__init__(self,[0,0,0,0],None)
             
-            Sprite.__init__(self)
+            self.rect = pygame.Rect(rect)
+            self.parent = parent
+
     
     class Layer():
         def __init__(self):

@@ -17,16 +17,17 @@ sprite = app.Sprite([200,200,150,150],canvas)
 img = app.Image("./512x512.jpg")
 sprite.canvas = img.image
 
+button0 = app.Button([10,50,200,75],canvas)
+button0.canvas.fill([255,0,0])
+
 layer = app.Layer()
-layer.addElements([c2,sprite,canvas])
+layer.addElements([c2,sprite,button0,canvas])
 
 while app.update():
     for e in app.events:
         pass
         
     canvas.clear()
-    
-    layer.depthSort()
     
     c2.position = [math.sin(app.window.frame/50)*32,math.cos(app.window.frame/50)*32]
         
