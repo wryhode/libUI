@@ -93,12 +93,23 @@ class Application():
         def __init__(self,rect,parent):
             Application.Sprite.__init__(self,rect,parent)
 
+            self.canvas.fill([92,51,76])
+            pygame.draw.rect(self.canvas,[168,43,121],[5,0,self.rect.width-5,self.rect.height-5])
+            pygame.draw.rect(self.canvas,[92,24,66],[5,5,self.rect.width-10,self.rect.height-10])
+
             self.held = False
+            self.touchPosition = [0,0]
 
         def update(self,mouse):
             if self.rect.collidepoint(mouse.position):
                 if mouse.downState[0]:
                     self.held = True
+
+                if self.held:
+                    self.touchPosition[0] = (self.rect.x - mouse.position[0]) / -self.rect.width
+                    self.touchPosition[1] = (self.rect.y - mouse.position[1]) / -self.rect.height
+
+                    print(self.touchPosition)
 
             if not mouse.buttons[0]:
                 self.held = False
