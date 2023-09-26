@@ -91,11 +91,11 @@ class Application():
     
     class Button(Sprite):
         def __init__(self,rect,parent):
-            Application.Sprite.__init__(self,[0,0,0,0],None)
-            
-            self.rect = pygame.Rect(rect)
-            self.parent = parent
+            Application.Sprite.__init__(self,rect,parent)
 
+        def update(self,mouse):
+            if mouse.state[0]:
+                print("Clicked")
     
     class Layer():
         def __init__(self):
@@ -156,6 +156,33 @@ class Application():
             self.position = [0,0]
             self.speed = [0,0]
             self.buttons = [False,False,False]
+            self.upState = [False,False,False]
+            self.downState = [False,False,False]
+
+        def update(self):
+            self.position = pygame.mouse.get_pos()
+            self.speed = pygame.mouse.get_rel()
+            
+            pressed = pygame.mouse.get_pressed()
+
+            for i,b in enumerate(pressed):
+                if pressed[i] and self.buttons[i] == False:
+                    self.downState[i] = True
+
+                elif pressed[i] and self.buttons[i]:
+                    self.downState[i] = False
+
+                else:
+                    self.downState[i] = False
+
+                if self.buttons[i] and pressed[i] == False:
+                    self.upState[i] = True
+
+                else:
+                    self.upState[i] = False
+
+            self.buttons = pressed
+
     
     def __init__(self,windowResolution,flags=0):
         self.window = self.Window(windowResolution,flags)
@@ -188,6 +215,7 @@ class Application():
                 run = False
         
         self.dt = self.clock.tick(self.window.framerate) / 1000
+        self.mouse.update()
         
         # Clear window, expect constant updates to canvas.draw()
         self.window.canvas.fill([0,0,0])
