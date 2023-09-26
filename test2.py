@@ -1,4 +1,3 @@
-import pygame
 import libUI
 import unitConverter
 
@@ -7,17 +6,22 @@ app = libUI.Application([800,640])
 canvas = app.Canvas(app.window.resolution,[0,0],app.window)
 
 button = app.Button([10,10,200,100],canvas)
-button.canvas.fill([255,0,0])
+button2 = app.Button([10,120,200,100],canvas)
 
 font = app.Font("./OpenSans.ttf",32)
-text = app.Text(font,"Hello, world!",[255,255,255],[10,10],canvas)
+text = app.Text(font,"Text",[255,255,255],[100,300],canvas)
 
 mainLayer = app.Layer()
-mainLayer.addElements([button,text])
+mainUpdateLayer = app.UpdateLayer()
+
+mainLayer.addElements([button,button2,text])
+mainUpdateLayer.addCloneFromLayer(mainLayer)
 
 while app.update():
-    button.update(app.mouse)
+    mainUpdateLayer.update(app)
     canvas.clear()
+
+    text.text = "Hello, world!"
 
     mainLayer.draw()
     canvas.draw()

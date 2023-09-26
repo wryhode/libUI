@@ -66,4 +66,4 @@ def convertSI(toConvert):
 
     print(str(result) + str(unitTableResult) + unitType)
     
-convertSI("1000ms")
+#convertSI("1000ms")

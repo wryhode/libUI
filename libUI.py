@@ -1,4 +1,22 @@
-import pygame
+# Tiny self-installer if the user doesn't have pygame installed
+try:
+    import pygame
+except ImportError:
+    print("This program requires the module PyGame to run")
+    answer = str(input("Do you want me to install it for you? (Y/N) [This will run 'pip install pygame'] >")).upper()
+
+    if answer == "Y":
+        import os
+        print("Installing...")
+        os.system("pip install pygame")
+        print()
+        print("Trying to start now...")
+        import pygame
+    else:
+        print("Ok. Type 'pip install pygame' to install it later.")
+        exit()
+
+# Assume all went well
 from pygame.locals import *
 pygame.init()
 
@@ -11,7 +29,7 @@ class Application():
             self.framerate = 60
             self.frame = 0
             self.canvas = pygame.display.set_mode(self.resolution,flags)
-            
+
     class Image():
         def __init__(self,path):
             try:
@@ -93,25 +111,34 @@ class Application():
         def __init__(self,rect,parent):
             Application.Sprite.__init__(self,rect,parent)
 
-            self.canvas.fill([92,51,76])
-            pygame.draw.rect(self.canvas,[168,43,121],[5,0,self.rect.width-5,self.rect.height-5])
-            pygame.draw.rect(self.canvas,[92,24,66],[5,5,self.rect.width-10,self.rect.height-10])
+            # Draw button image
+            self.drawUnPressed()
 
             self.held = False
             self.touchPosition = [0,0]
+
+        def drawPressed(self):
+            self.canvas.fill([92,51,76])
+            pygame.draw.rect(self.canvas,[168,43,121],[5,0,self.rect.width-5,self.rect.height-5])
+            pygame.draw.rect(self.canvas,[219,57,157],[5,5,self.rect.width-10,self.rect.height-10])
+
+        def drawUnPressed(self):
+            self.canvas.fill([92,51,76])
+            pygame.draw.rect(self.canvas,[168,43,121],[5,0,self.rect.width-5,self.rect.height-5])
+            pygame.draw.rect(self.canvas,[92,24,66],[5,5,self.rect.width-10,self.rect.height-10])
 
         def update(self,mouse):
             if self.rect.collidepoint(mouse.position):
                 if mouse.downState[0]:
                     self.held = True
+                    self.drawPressed()
 
                 if self.held:
                     self.touchPosition[0] = (self.rect.x - mouse.position[0]) / -self.rect.width
                     self.touchPosition[1] = (self.rect.y - mouse.position[1]) / -self.rect.height
 
-                    print(self.touchPosition)
-
             if not mouse.buttons[0]:
+                self.drawUnPressed()
                 self.held = False
     
     class Font():
@@ -139,11 +166,13 @@ class Application():
                 self.reDraw()
                 self.prevText = self.text
 
+        def update(self):
+            self.softUpdate()
+
         def draw(self):
             self.softUpdate()
             self.parent.blit(self.canvas,self.rect)
             
-
         @property
         def position(self):
             return self.rect.topleft
@@ -178,7 +207,38 @@ class Application():
         def draw(self):
             for i in self.toDraw:
                 i.parent.canvas.blit(i.canvas,i.position)
+
+        def addCloneFromUpdateLayer(self,updateLayer):
+            for i in updateLayer.toUpdate:
+                self.toDraw.append(i)
     
+    class UpdateLayer():
+        def __init__(self):
+            self.toUpdate = []
+
+        def addElement(self,element):
+            self.toUpdate.append(element)
+            print(self.toUpdate)
+        
+        def addElements(self,iterable):
+            for i in iterable:
+                self.addElement(i)
+
+        def addCloneFromLayer(self,layer):
+            for i in layer.toDraw:
+                self.toUpdate.append(i)
+
+        def update(self,app):
+            for e in self.toUpdate:
+                if isinstance(e,Application.Button):
+                    e.update(app.mouse)
+                else:
+                        e.update()
+
+    class TextInput():
+        def __init__(self):
+            self.input = ""
+
     class Utils():
         def __init__(self):
             pass
