@@ -93,10 +93,50 @@ class Application():
         def __init__(self,rect,parent):
             Application.Sprite.__init__(self,rect,parent)
 
+            self.held = False
+
         def update(self,mouse):
-            if mouse.state[0]:
-                print("Clicked")
+            if self.rect.collidepoint(mouse.position):
+                if mouse.downState[0]:
+                    self.held = True
+
+            if not mouse.buttons[0]:
+                self.held = False
     
+    class Font():
+        def __init__(self,path,size):
+            self.font = pygame.font.Font(path,size)
+
+    class Text():
+        def __init__(self,font,text,color,position,parent):
+            self.font = font
+            self.text = text
+            self.prevText = self.text
+            self.color = color
+            self.rect = pygame.Rect(position,[0,0])
+            self.parent = parent
+
+            self.reDraw()
+
+        def reDraw(self):
+            self.canvas = self.font.font.render(str(self.text),True,self.color)
+            self.rect = pygame.Rect(self.rect.topleft,self.canvas.get_size())
+
+        def softUpdate(self):
+            # Detects if the text has changed and automatically updates it
+            if self.text != self.prevText:
+                self.reDraw()
+                self.prevText = self.text
+
+        def draw(self):
+            self.softUpdate()
+            self.parent.blit(self.canvas,self.rect)
+            
+
+        @property
+        def position(self):
+            return self.rect.topleft
+
     class Layer():
         def __init__(self):
             self.toDraw = []
@@ -182,7 +222,6 @@ class Application():
                     self.upState[i] = False
 
             self.buttons = pressed
-
     
     def __init__(self,windowResolution,flags=0):
         self.window = self.Window(windowResolution,flags)
