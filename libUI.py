@@ -82,6 +82,9 @@ class Application():
             self.rect.size = resolution
             self.canvas = pygame.Surface(resolution)
             
+        def update(self):
+            pass
+
     class Sprite(pygame.sprite.Sprite):
         def __init__(self, rect, parent):
             self.rect = pygame.Rect(rect)
@@ -118,16 +121,24 @@ class Application():
 
             self.held = False
             self.touchPosition = [0,0]
+            self.reDrew = False
 
         def drawPressed(self):
             self.canvas.fill([92,51,76])
             pygame.draw.rect(self.canvas,[168,43,121],[5,0,self.rect.width-5,self.rect.height-5])
             pygame.draw.rect(self.canvas,[219,57,157],[5,5,self.rect.width-10,self.rect.height-10])
+            self.reDrew = True
 
         def drawUnPressed(self):
             self.canvas.fill([92,51,76])
             pygame.draw.rect(self.canvas,[168,43,121],[5,0,self.rect.width-5,self.rect.height-5])
             pygame.draw.rect(self.canvas,[92,24,66],[5,5,self.rect.width-10,self.rect.height-10])
+            self.reDrew = True
+
+        def clampTouchPos(self,v):
+            if v < 0: return 0
+            if v > 1: return 1
+            return v
 
         def update(self,mouse):
             if self.rect.collidepoint(mouse.position):
@@ -135,9 +146,9 @@ class Application():
                     self.held = True
                     self.drawPressed()
 
-                if self.held:
-                    self.touchPosition[0] = (self.rect.x - mouse.position[0]) / -self.rect.width
-                    self.touchPosition[1] = (self.rect.y - mouse.position[1]) / -self.rect.height
+            if self.held:
+                self.touchPosition[0] = self.clampTouchPos((self.rect.x - mouse.position[0]) / -self.rect.width)
+                self.touchPosition[1] = self.clampTouchPos((self.rect.y - mouse.position[1]) / -self.rect.height)
 
             if not mouse.buttons[0]:
                 self.drawUnPressed()
@@ -149,6 +160,9 @@ class Application():
     class Font():
         def __init__(self,path,size):
             self.font = pygame.font.Font(path,size)
+
+        def sizeOf(self,input):
+            return self.font.size(str(input))
 
     class Text():
         def __init__(self,font,text,color,position,parent):
@@ -176,11 +190,65 @@ class Application():
 
         def draw(self):
             self.softUpdate()
-            self.parent.blit(self.canvas,self.rect)
+            self.parent.canvas.blit(self.canvas,self.rect)
             
         @property
         def position(self):
             return self.rect.topleft
+
+    class TextInput(Button):
+        def __init__(self,rect,parent,font,color):
+            Application.Button.__init__(self,rect,parent)
+            
+            self.input = ""
+            self.focused = False
+            self.font = font
+            self.color = color
+            self.textCanvas = self.font.font.render("TextInput element",True,self.color)
+        
+        def update(self, mouse):
+            super().update(mouse)
+
+            if self.held:
+                self.focused = True
+            
+            if mouse.downState[0] and not self.rect.collidepoint(mouse.position) and not self.held:
+                self.focused = False
+
+            if self.focused:
+                self.canvas.fill([255,0,0])
+
+        def draw(self):
+            if self.reDrew:
+                self.canvas.blit(self.textCanvas,(0,0))
+                self.reDrew = False
+
+            self.parent.canvas.blit(self.canvas,self.rect.topleft)
+
+    class Slider(Button):
+        def __init__(self,rect,direction,parent):
+            Application.Button.__init__(self,rect,parent)
+
+            self.direction = direction # True -> Vertical, False -> Horizontal
+
+            if self.direction:
+                self.sliderHead = Application.Sprite([(0,0),(self.rect.width,self.rect.width)],self)
+            else:
+                self.sliderHead = Application.Sprite([(0,0),(self.rect.height,self.rect.height)],self)
+
+            self.sliderHead.canvas.fill([255,0,0])
+
+        def update(self, mouse):
+            super().update(mouse)
+
+            if self.held:
+                self.drawPressed()
+                if self.direction:
+                    self.sliderHead.rect.topleft = 0,self.touchPosition[1] * self.rect.height
+                else:
+                    self.sliderHead.rect.topleft = self.touchPosition[0] * self.rect.width,0
+
+            self.sliderHead.draw()
 
     class Layer():
         def __init__(self):
@@ -219,7 +287,8 @@ class Application():
         
         def draw(self):
             for i in self.toDraw:
-                i.parent.canvas.blit(i.canvas,i.position)
+                i.draw()
+                #i.parent.canvas.blit(i.canvas,i.position)
 
         def addCloneFromUpdateLayer(self,updateLayer):
             for i in updateLayer.toUpdate:
@@ -257,30 +326,6 @@ class Application():
                     e.update(app.mouse)
                 else:
                         e.update()
-
-    class TextInput(Button):
-        def __init__(self,rect,parent,font,color):
-            Application.Button.__init__(self,rect,parent)
-            
-            self.input = ""
-            self.focused = False
-            self.font = font
-            self.color = color
-            self.textCanvas = self.font.font.render("Texthere",True,self.color)
-        
-        def update(self, mouse):
-            super().update(mouse)
-
-            if self.held:
-                self.focused = True
-            
-            if mouse.downState[0] and not self.rect.collidepoint(mouse.position) and not self.held:
-                self.focused = False
-
-            if self.focused:
-                self.canvas.fill([255,0,0])
-
-            self.canvas.blit(self.textCanvas,(0,0))
 
     class Utils():
         def __init__(self):
