@@ -1,8 +1,9 @@
 # Tiny self-installer if the user doesn't have pygame installed
 try:
     import pygame
+
 except ImportError:
-    print("This program requires the module PyGame to run")
+    print("This program requires the module 'PyGame' to run")
     answer = str(input("Do you want me to install it for you? (Y/N) [This will run 'pip install pygame'] >")).upper()
 
     if answer == "Y":
@@ -12,6 +13,7 @@ except ImportError:
         print()
         print("Trying to start now...")
         import pygame
+    
     else:
         print("Ok. Type 'pip install pygame' to install it later.")
         exit()
@@ -140,6 +142,9 @@ class Application():
             if not mouse.buttons[0]:
                 self.drawUnPressed()
                 self.held = False
+
+        def draw(self):
+            self.parent.canvas.blit(self.canvas,self.rect.topleft)
     
     class Font():
         def __init__(self,path,size):
@@ -187,6 +192,14 @@ class Application():
         def addElements(self,iterable):
             for i in iterable:
                 self.addElement(i)
+
+        def removeElement(self,element):
+            if self.hasElement(element):
+                self.toDraw.remove(element)
+
+        def removeElements(self,iterable):
+            for i in iterable:
+                self.removeElement(i)
         
         def hasElement(self,element):
             return element in self.toDraw
@@ -218,11 +231,21 @@ class Application():
 
         def addElement(self,element):
             self.toUpdate.append(element)
-            print(self.toUpdate)
         
         def addElements(self,iterable):
             for i in iterable:
                 self.addElement(i)
+
+        def removeElement(self,element):
+            if self.hasElement(element):
+                self.toUpdate.remove(element)
+
+        def removeElements(self,iterable):
+            for i in iterable:
+                self.removeElement(i)
+
+        def hasElement(self,element):
+            return element in self.toUpdate
 
         def addCloneFromLayer(self,layer):
             for i in layer.toDraw:
@@ -235,9 +258,29 @@ class Application():
                 else:
                         e.update()
 
-    class TextInput():
-        def __init__(self):
+    class TextInput(Button):
+        def __init__(self,rect,parent,font,color):
+            Application.Button.__init__(self,rect,parent)
+            
             self.input = ""
+            self.focused = False
+            self.font = font
+            self.color = color
+            self.textCanvas = self.font.font.render("Texthere",True,self.color)
+        
+        def update(self, mouse):
+            super().update(mouse)
+
+            if self.held:
+                self.focused = True
+            
+            if mouse.downState[0] and not self.rect.collidepoint(mouse.position) and not self.held:
+                self.focused = False
+
+            if self.focused:
+                self.canvas.fill([255,0,0])
+
+            self.canvas.blit(self.textCanvas,(0,0))
 
     class Utils():
         def __init__(self):
@@ -343,3 +386,6 @@ class Application():
     
     def addEventCallback(self,eventName,function,dictToTest = None):
         self.evCallbacks[eventName] = {"func":function,"dict":dictToTest}
+
+if __name__ == "__main__":
+    print("This script is not to be ran, please run another one in this folder (or subfolder)")
