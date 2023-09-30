@@ -1,54 +1,79 @@
 import libUI
 import unitConverter
 
-app = libUI.Application([1768,1000])
+class Application():
+    def __init__(self,resolution):
+        self.app = libUI.Application(resolution,libUI.pygame.RESIZABLE)
+        self.app.attachResizeBehaviour(self.reBuildInterface)
 
-canvas = app.Canvas(app.window.resolution,[0,0],app.window)
-font = app.Font("./Rubik-Regular.ttf",32)
-mainLayer = app.Layer()
-mainUpdateLayer = app.UpdateLayer()
+        self.mainLayer = self.app.Layer()
+        self.mainUpdateLayer = self.app.UpdateLayer()
 
-commandLineWidth = 0.8
-commandLineSize = app.utils.fracDomain([commandLineWidth,0.25],app.window.resolution)
+        self.UIsizing = self.app.ElementCollection()
+        self.UIsizing.vertSplit = 0.75
+        self.UIsizing.commandLineHeight = 0.2
+        self.UIsizing.commandLineHistoryLength = 5
+        self.UIsizing.objectsMenuHeight = 0.5
 
-commandLineHistoryLength = 32
-commandLineHistory = app.Canvas(
-    [
-        commandLineSize[0],
-        font.sizeOf("e")[1]*commandLineHistoryLength
-    ],
-    [0,0],
-    canvas
-)
-commandLineInput = app.TextInput(
-    [
-        (0,0),
-        (commandLineSize[0],font.sizeOf("e")[1])
-    ],
-    canvas,
-    font,
-    [255,255,255]
-)
+        self.reBuildInterface()
 
-objectPanel = app.Canvas(
-    app.utils.fracDomain([1-commandLineWidth,1],app.window.resolution),
-    [commandLineSize[0],0],
-    canvas
-)
-objectPanel.canvas.fill([255,0,0])
+        self.app.addEventCallback("KeyDown",self.resizeOnKey,{"unicode":"r"})
 
-slider = app.Slider([100,120,15,500],True,canvas)
-slider2 = app.Slider([100,80,500,15],False,canvas)
+    def reBuildInterface(self):
+        self.canvas = self.app.Canvas(self.app.window.resolution,[0,0],self.app.window)
+        self.font = self.app.Font("./Rubik-Regular.ttf",int(self.app.window.resolution[1]/31.25))
+        self.smallFont = self.app.Font("./Rubik-Regular.ttf",int(self.app.window.resolution[1]/62.5))
+        self.LargeFont = self.app.Font("./Rubik-Regular.ttf",int(self.app.window.resolution[1]/16.125))
 
-mainLayer.addElements([commandLineHistory,commandLineInput,objectPanel,slider,slider2])
-mainUpdateLayer.addCloneFromLayer(mainLayer)
+        self.UIsizing.commandLineSize = self.app.utils.fracDomain([self.UIsizing.vertSplit,self.UIsizing.commandLineHeight],self.app.window.resolution)
+        self.UIsizing.sideBarSize = self.app.utils.fracDomain([1-self.UIsizing.vertSplit,1],self.app.window.resolution)
+        self.UIsizing.sideBarPosition = self.app.utils.fracDomain([self.UIsizing.vertSplit,0],self.app.window.resolution)
+        self.UIsizing.objectsMenuSize = self.app.utils.fracDomain([1,self.UIsizing.objectsMenuHeight],self.UIsizing.sideBarSize)
 
-while app.update():
-    mainUpdateLayer.update(app)
-    canvas.clear()
+        # Dont duplicate elements
+        self.mainLayer.removeAll()
+        self.mainUpdateLayer.removeAll()
 
-    
+        self.commandLine = self.app.ElementCollection()
+        self.commandLine.canvas = self.app.Canvas(self.UIsizing.commandLineSize,[0,0],self.canvas)
+        self.commandLine.history = self.app.Canvas([self.commandLine.canvas.rect.width,(self.commandLine.canvas.rect.height / self.UIsizing.commandLineHistoryLength) * (self.UIsizing.commandLineHistoryLength-1)],[0,0],self.canvas)
+        self.commandLine.longHistory = self.app.Canvas([self.commandLine.canvas.rect.width,self.font.sizeOf("L")[1]*25],[0,0],self.commandLine.history)
+        for i in range(25):
+            self.commandLine.longHistory.canvas.blit(self.font.font.render("Element: "+str(i),True,[255,255,255]),(0,i*self.font.sizeOf("L")[1]))
 
-    mainLayer.draw()
-    canvas.draw()
-    app.draw()
+        self.commandLine.slider = self.app.Slider([self.commandLine.canvas.rect.width-25,0,25,self.commandLine.history.rect.height+1],True,self.canvas)
+        self.commandLine.input = self.app.TextInput([0,self.commandLine.history.rect.height,self.commandLine.canvas.rect.width,(self.commandLine.canvas.rect.height / self.UIsizing.commandLineHistoryLength)],self.commandLine.canvas,self.font,[255,255,255])
+
+        self.sideBar = self.app.ElementCollection()
+        self.sideBar.canvas = self.app.Canvas(self.UIsizing.sideBarSize,self.UIsizing.sideBarPosition,self.canvas)
+        self.sideBar.canvas.canvas.fill([25,25,25])
+
+        self.objectsMenu = self.app.ElementCollection()
+        self.objectsMenu.header = self.app.Canvas(self.UIsizing.objectsMenuSize,[0,0],self.sideBar.canvas)
+
+        self.mainLayer.addElementCollection(self.commandLine)
+        self.mainLayer.addElementCollection(self.objectsMenu)
+        self.mainLayer.addElementCollection(self.sideBar)
+        self.mainUpdateLayer.addCloneFromLayer(self.mainLayer)
+
+    def resizeOnKey(self,dict):
+        self.reBuildInterface()
+
+    def run(self):
+        while self.app.update():
+            self.mainUpdateLayer.update(self.app)
+            self.canvas.clear([33,33,33])
+
+            # Scroll commandline history
+            self.commandLine.longHistory.rect.y = -self.commandLine.slider.value * (self.commandLine.longHistory.rect.height-self.commandLine.history.rect.height)
+
+            if len(self.app.keyboard.down) > 0:
+                print(self.app.keyboard.down)
+
+            self.mainLayer.draw()
+            self.canvas.draw()
+            self.app.draw()
+
+if __name__ == "__main__":
+    app = Application([1777,1000])
+    app.run()

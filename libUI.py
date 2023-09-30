@@ -32,6 +32,9 @@ class Application():
             self.frame = 0
             self.canvas = pygame.display.set_mode(self.resolution,flags)
 
+        def setTitle(self,title):
+            pygame.display.set_caption(str(title))
+
     class Image():
         def __init__(self,path):
             try:
@@ -124,15 +127,13 @@ class Application():
             self.reDrew = False
 
         def drawPressed(self):
-            self.canvas.fill([92,51,76])
-            pygame.draw.rect(self.canvas,[168,43,121],[5,0,self.rect.width-5,self.rect.height-5])
-            pygame.draw.rect(self.canvas,[219,57,157],[5,5,self.rect.width-10,self.rect.height-10])
+            self.canvas.fill([25,25,25])
+            pygame.draw.rect(self.canvas,[114,114,114],[[0,0],self.rect.size],1)
             self.reDrew = True
 
         def drawUnPressed(self):
-            self.canvas.fill([92,51,76])
-            pygame.draw.rect(self.canvas,[168,43,121],[5,0,self.rect.width-5,self.rect.height-5])
-            pygame.draw.rect(self.canvas,[92,24,66],[5,5,self.rect.width-10,self.rect.height-10])
+            self.canvas.fill([12,12,12])
+            pygame.draw.rect(self.canvas,[114,114,114],[[0,0],self.rect.size],1)
             self.reDrew = True
 
         def clampTouchPos(self,v):
@@ -206,7 +207,7 @@ class Application():
             self.color = color
             self.textCanvas = self.font.font.render("TextInput element",True,self.color)
         
-        def update(self, mouse):
+        def update(self, mouse, keyboard):
             super().update(mouse)
 
             if self.held:
@@ -236,7 +237,28 @@ class Application():
             else:
                 self.sliderHead = Application.Sprite([(0,0),(self.rect.height,self.rect.height)],self)
 
-            self.sliderHead.canvas.fill([255,0,0])
+            self.value = 0
+
+            self.sliderHead.canvas.fill([114,114,114])
+
+        def clampSliderHead(self,v,size,headSize):
+            if v < 0:
+                v == 0
+            elif v > size - headSize:
+                v = size - headSize
+            return v
+        
+        def notZero(self,v):
+            if v == 0:
+                return 0.001
+            else:
+                return v
+
+        def getValue(self):
+            if self.direction:
+                return round((self.sliderHead.rect.y) / (self.notZero(self.rect.height - self.sliderHead.rect.height)),4)
+            else:
+                return round((self.sliderHead.rect.x) / (self.notZero(self.rect.width - self.sliderHead.rect.width)),4)
 
         def update(self, mouse):
             super().update(mouse)
@@ -244,9 +266,11 @@ class Application():
             if self.held:
                 self.drawPressed()
                 if self.direction:
-                    self.sliderHead.rect.topleft = 0,self.touchPosition[1] * self.rect.height
+                    self.sliderHead.rect.topleft = 0,self.clampSliderHead(self.touchPosition[1] * self.rect.height,self.rect.height,self.sliderHead.rect.height)
                 else:
-                    self.sliderHead.rect.topleft = self.touchPosition[0] * self.rect.width,0
+                    self.sliderHead.rect.topleft = self.clampSliderHead(self.touchPosition[0] * self.rect.width,self.rect.width,self.sliderHead.rect.width),0
+
+            self.value = self.getValue()
 
             self.sliderHead.draw()
 
@@ -261,6 +285,10 @@ class Application():
             for i in iterable:
                 self.addElement(i)
 
+        def addElementCollection(self,ec):
+            for i in ec.__dict__:
+                self.addElement(ec.__dict__[i])
+
         def removeElement(self,element):
             if self.hasElement(element):
                 self.toDraw.remove(element)
@@ -268,6 +296,9 @@ class Application():
         def removeElements(self,iterable):
             for i in iterable:
                 self.removeElement(i)
+
+        def removeAll(self):
+            self.toDraw.clear()
         
         def hasElement(self,element):
             return element in self.toDraw
@@ -305,6 +336,10 @@ class Application():
             for i in iterable:
                 self.addElement(i)
 
+        def addElementCollection(self,ec):
+            for i in ec.__dict__:
+                self.addElement(ec.__dict__[i])
+
         def removeElement(self,element):
             if self.hasElement(element):
                 self.toUpdate.remove(element)
@@ -312,6 +347,9 @@ class Application():
         def removeElements(self,iterable):
             for i in iterable:
                 self.removeElement(i)
+
+        def removeAll(self):
+            self.toUpdate.clear()
 
         def hasElement(self,element):
             return element in self.toUpdate
@@ -322,12 +360,20 @@ class Application():
 
         def update(self,app):
             for e in self.toUpdate:
-                if isinstance(e,Application.Button):
+                if isinstance(e,Application.TextInput):
+                    e.update(app.mouse,pygame.key)
+                elif isinstance(e,Application.Button):
                     e.update(app.mouse)
                 else:
                         e.update()
 
+    class ElementCollection():
+        """Essentially an empty class that you can add elements to, to make organising stuff easier"""
+        def __init__(self):
+            pass
+
     class Utils():
+        """Handy functions"""
         def __init__(self):
             pass
             
@@ -351,6 +397,7 @@ class Application():
                 return True
                 
     class Mouse():
+        """Handles mouse stuff"""
         def __init__(self):
             self.position = [0,0]
             self.speed = [0,0]
@@ -382,9 +429,23 @@ class Application():
 
             self.buttons = pressed
     
+    class Keyboard():
+        def __init__(self):
+            self.pressed = []
+            self.down = []
+
+        def preUpdate(self):
+            self.down = []
+
+        def update(self):
+            self.pressed = pygame.key.get_pressed()
+
     def __init__(self,windowResolution,flags=0):
         self.window = self.Window(windowResolution,flags)
+        self.window.setTitle("libUI Application")
+        self.resizeFunction = None
         self.mouse = self.Mouse()
+        self.keyboard = self.Keyboard()
         self.clock = pygame.time.Clock()
         self.dt = 0
         self.utils = self.Utils()
@@ -392,6 +453,7 @@ class Application():
       
     def update(self):
         run = True
+        self.keyboard.preUpdate()
         self.events = pygame.event.get()
         for e in self.events:
             en = pygame.event.event_name(e.type)
@@ -399,21 +461,34 @@ class Application():
             if en in self.evCallbacks:
                 # Nothing to compare
                 if self.evCallbacks[en]["dict"] == None:
-                    self.evCallbacks[en]["func"](e.__dict__)
+                    try:
+                        self.evCallbacks[en]["func"](e.__dict__)
+                    except TypeError: # Assume that the function doesn't take any further arguments?
+                        self.evCallbacks[en]["func"]()
                 else:
                     for ek in self.evCallbacks[en]["dict"]:
                         try:
                             if e.__dict__[ek] == self.evCallbacks[en]["dict"][ek]:
-                                self.evCallbacks[en]["func"](e.__dict__)
+                                try:
+                                    self.evCallbacks[en]["func"](e.__dict__)
+                                except TypeError: # Assume that the function doesn't take any further arguments?
+                                    self.evCallbacks[en]["func"]()
                         # Key does not exist
                         except KeyError:
                             pass
                 
             if e.type == pygame.QUIT:
                 run = False
+
+            elif e.type == pygame.VIDEORESIZE:
+                self.resize(e.size)
+
+            elif e.type == pygame.KEYDOWN:
+                self.keyboard.down.append(e.key)
         
         self.dt = self.clock.tick(self.window.framerate) / 1000
         self.mouse.update()
+        self.keyboard.update()
         
         # Clear window, expect constant updates to canvas.draw()
         self.window.canvas.fill([0,0,0])
@@ -428,9 +503,14 @@ class Application():
         
     def resize(self,newResolution):
         self.window.__init__(newResolution,self.window.flags)
+        if self.resizeFunction != None:
+            self.resizeFunction()
+
+    def attachResizeBehaviour(self,function):
+        self.resizeFunction = function
     
     def addEventCallback(self,eventName,function,dictToTest = None):
         self.evCallbacks[eventName] = {"func":function,"dict":dictToTest}
 
 if __name__ == "__main__":
-    print("This script is not to be ran, please run another one in this folder (or subfolder)")
+    print("This script is not to be ran on its own. Please run another one in this folder (or parent-folder)")
