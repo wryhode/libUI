@@ -14,10 +14,9 @@ class Application():
         self.UIsizing.commandLineHeight = 0.2
         self.UIsizing.commandLineHistoryLength = 5
         self.UIsizing.objectsMenuHeight = 0.5
+        self.UIsizing.objectsMenuNumItems = 10
 
         self.reBuildInterface()
-
-        self.app.addEventCallback("KeyDown",self.resizeOnKey,{"unicode":"r"})
 
     def reBuildInterface(self):
         self.canvas = self.app.Canvas(self.app.window.resolution,[0,0],self.app.window)
@@ -29,6 +28,7 @@ class Application():
         self.UIsizing.sideBarSize = self.app.utils.fracDomain([1-self.UIsizing.vertSplit,1],self.app.window.resolution)
         self.UIsizing.sideBarPosition = self.app.utils.fracDomain([self.UIsizing.vertSplit,0],self.app.window.resolution)
         self.UIsizing.objectsMenuSize = self.app.utils.fracDomain([1,self.UIsizing.objectsMenuHeight],self.UIsizing.sideBarSize)
+        self.UIsizing.objectsMenuItemSize = self.app.utils.fracDomain([1,1/self.UIsizing.objectsMenuNumItems],self.UIsizing.objectsMenuSize)
 
         # Dont duplicate elements
         self.mainLayer.removeAll()
@@ -43,13 +43,16 @@ class Application():
 
         self.commandLine.slider = self.app.Slider([self.commandLine.canvas.rect.width-25,0,25,self.commandLine.history.rect.height+1],True,self.canvas)
         self.commandLine.input = self.app.TextInput([0,self.commandLine.history.rect.height,self.commandLine.canvas.rect.width,(self.commandLine.canvas.rect.height / self.UIsizing.commandLineHistoryLength)],self.commandLine.canvas,self.font,[255,255,255])
+        self.commandLine.input.callback = self.printInput
 
         self.sideBar = self.app.ElementCollection()
         self.sideBar.canvas = self.app.Canvas(self.UIsizing.sideBarSize,self.UIsizing.sideBarPosition,self.canvas)
         self.sideBar.canvas.canvas.fill([25,25,25])
 
         self.objectsMenu = self.app.ElementCollection()
-        self.objectsMenu.header = self.app.Canvas(self.UIsizing.objectsMenuSize,[0,0],self.sideBar.canvas)
+        self.objectsMenu.canvas = self.app.Canvas(self.UIsizing.objectsMenuSize,[0,0],self.sideBar.canvas)
+        self.objectsMenu.header = self.app.Canvas(self.UIsizing.objectsMenuItemSize,[0,0],self.objectsMenu.canvas)
+        self.objectsMenu.header.canvas.fill([25,25,25])
 
         self.mainLayer.addElementCollection(self.commandLine)
         self.mainLayer.addElementCollection(self.objectsMenu)
@@ -59,6 +62,9 @@ class Application():
     def resizeOnKey(self,dict):
         self.reBuildInterface()
 
+    def printInput(self,input):
+        print(input)
+
     def run(self):
         while self.app.update():
             self.mainUpdateLayer.update(self.app)
@@ -66,9 +72,6 @@ class Application():
 
             # Scroll commandline history
             self.commandLine.longHistory.rect.y = -self.commandLine.slider.value * (self.commandLine.longHistory.rect.height-self.commandLine.history.rect.height)
-
-            if len(self.app.keyboard.down) > 0:
-                print(self.app.keyboard.down)
 
             self.mainLayer.draw()
             self.canvas.draw()

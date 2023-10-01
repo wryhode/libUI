@@ -85,5 +85,3 @@ def mathSI(A, B, operation):
         return result,aConverted[1],aConverted[2],operation,bConverted[1],bConverted[2]
     else:
         return result,aConverted[1],aConverted[2]
-
-print(mathSI("100s","1Kg","/"))

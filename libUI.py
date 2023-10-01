@@ -201,12 +201,41 @@ class Application():
         def __init__(self,rect,parent,font,color):
             Application.Button.__init__(self,rect,parent)
             
-            self.input = ""
+            self.cursor = 0
+            self.input = []
+            self.callback = None
             self.focused = False
             self.font = font
             self.color = color
-            self.textCanvas = self.font.font.render("TextInput element",True,self.color)
+            self.textCanvas = self.font.font.render("_",True,self.color)
         
+        @property
+        def inputText(self):
+            return "".join(self.input)
+
+        def typeCharacter(self,char):
+            self.input.insert(self.cursor,char)
+            self.cursor += 1
+            self.updateInputText()
+
+        def cursorMoveLeft(self):
+            if self.cursor > 0:
+                self.cursor -= 1
+            self.reDrew = True
+            self.updateInputText()
+
+        def cursorMoveRight(self):
+            if self.cursor < len(self.input):
+                self.cursor += 1
+            self.reDrew = True
+            self.updateInputText()
+
+        def deleteCharacter(self):
+            self.cursorMoveLeft()
+            if len(self.input) > 0:
+                self.input.pop(self.cursor)
+            self.updateInputText()
+
         def update(self, mouse, keyboard):
             super().update(mouse)
 
@@ -214,15 +243,40 @@ class Application():
                 self.focused = True
             
             if mouse.downState[0] and not self.rect.collidepoint(mouse.position) and not self.held:
+                keyboard.endTextInput()
                 self.focused = False
 
             if self.focused:
-                self.canvas.fill([255,0,0])
+                keyboard.startTextInput(self)
+
+        def updateInputText(self):
+            self.textCanvas = self.font.font.render("".join(self.input),True,self.color)
+            self.reDrew = True
+            self.draw()
+
+        def unFocus(self,callback = True):
+            if callback and self.callback != None:
+                self.callback(self.inputText)
+
+            self.focused = False
+            self.input = []
+            self.cursor = 0
+            self.updateInputText()
+            self.textCanvas = self.font.font.render("_",True,self.color)
 
         def draw(self):
             if self.reDrew:
-                self.canvas.blit(self.textCanvas,(0,0))
+                if self.focused: 
+                    self.canvas.fill([255,0,0])
+                    cursorX = self.font.sizeOf(self.inputText[0:self.cursor])[0]
+                    pygame.draw.line(self.canvas,[255,255,255],(cursorX,0),(cursorX,self.rect.height))
+                if self.textCanvas.get_size()[0] > self.rect.width:
+                    self.canvas.blit(self.textCanvas,(-(self.textCanvas.get_size()[0] - self.rect.width),0))
+                else:
+                    self.canvas.blit(self.textCanvas,(0,0))
+
                 self.reDrew = False
+
 
             self.parent.canvas.blit(self.canvas,self.rect.topleft)
 
@@ -361,7 +415,7 @@ class Application():
         def update(self,app):
             for e in self.toUpdate:
                 if isinstance(e,Application.TextInput):
-                    e.update(app.mouse,pygame.key)
+                    e.update(app.mouse,app.keyboard)
                 elif isinstance(e,Application.Button):
                     e.update(app.mouse)
                 else:
@@ -434,8 +488,20 @@ class Application():
             self.pressed = []
             self.down = []
 
+            self.textInputObject = None
+
         def preUpdate(self):
             self.down = []
+
+        def startTextInput(self,textInputObject):
+            self.textInputObject = textInputObject
+            pygame.key.start_text_input()
+            pygame.key.set_text_input_rect(self.textInputObject.rect)
+        
+        def endTextInput(self):
+            self.textInputObject = None
+            pygame.key.stop_text_input()
+            pygame.key.set_text_input_rect([0,0,100,100])
 
         def update(self):
             self.pressed = pygame.key.get_pressed()
@@ -484,7 +550,33 @@ class Application():
                 self.resize(e.size)
 
             elif e.type == pygame.KEYDOWN:
+                # If textinput is active
+                if self.keyboard.textInputObject != None:
+                    # Detach textInput from the keyboard
+                    if e.key == pygame.K_RETURN:
+                        self.keyboard.textInputObject.unFocus(True)
+                        self.keyboard.textInputObject = None
+
+                    elif e.key == pygame.K_ESCAPE:
+                        self.keyboard.textInputObject.unFocus(False)
+                        self.keyboard.textInputObject = None
+
+                    elif e.key == pygame.K_LEFT:
+                        self.keyboard.textInputObject.cursorMoveLeft()
+
+                    elif e.key == pygame.K_RIGHT:
+                        self.keyboard.textInputObject.cursorMoveRight()
+                    
+                    elif e.key == pygame.K_BACKSPACE:
+                        self.keyboard.textInputObject.deleteCharacter()
+
                 self.keyboard.down.append(e.key)
+
+            elif e.type == pygame.TEXTINPUT:
+                if self.keyboard.textInputObject != None:
+                    self.keyboard.textInputObject.typeCharacter(e.text)
+                    #self.keyboard.textInputObject.input += e.text
+                    #self.keyboard.textInputObject.updateInputText()
         
         self.dt = self.clock.tick(self.window.framerate) / 1000
         self.mouse.update()
