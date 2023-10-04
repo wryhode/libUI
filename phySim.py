@@ -1,5 +1,6 @@
 import libUI
 import unitConverter
+from phys import PhysObject
 
 class Application():
     def __init__(self,resolution):
@@ -67,7 +68,7 @@ class Application():
 
     def createPhysObject(self,name):
         if not name in self.physObjects:
-            self.physObjects[name] = 
+            self.physObjects[name] = PhysObject()
             return True
         else:
             return False,"Object already exists"
@@ -77,9 +78,8 @@ class Application():
         target = command[0].lower()
 
         if target == "new":
-
-
-
+            name = command[1]
+            self.createPhysObject(name)
 
     def run(self):
         while self.app.update():
