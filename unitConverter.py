@@ -43,22 +43,26 @@ def convertSI(toConvert):
     unit = ""
     sNumber = ""
     
+    conv = toConvert.split("^")
+
+    toConvert = conv[0]
+    if len(conv) > 1:
+        exponent = conv[1]
+        exponent.strip("^")
+        exponent = float(exponent)
+    else:
+        exponent = "1"
+
     for c in toConvert[::-1]:
         if c.isalpha():
             unit += c
         else:
             sNumber += c
-
-    #for c in toConvert:
-    #    if c.isnumeric():
-    #        sNumber += c
-    #    else:
-    #        unit += c
     
     if unit == "" or sNumber == "":
         raise ConversionError
     
-    number = float(sNumber[::-1])
+    number = float(sNumber[::-1]) * (10 ** exponent)
 
     if len(unit) > 1:
         unitSize = unit[1]
