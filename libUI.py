@@ -578,7 +578,7 @@ class Application():
                     #self.keyboard.textInputObject.input += e.text
                     #self.keyboard.textInputObject.updateInputText()
         
-        self.dt = self.clock.tick(self.window.framerate) / 1000
+        self.dt = self.clock.tick(self.window.framerate) / 100
         self.mouse.update()
         self.keyboard.update()
         
