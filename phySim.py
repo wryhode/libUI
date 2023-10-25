@@ -1,6 +1,7 @@
 import libUI
 import unitConverter
 from phys import PhysObject
+from commandLine import parseCommand
 
 class Application():
     def __init__(self,resolution):
@@ -84,7 +85,10 @@ class Application():
     def redrawCommandHistory(self):
         self.commandLine.longHistory.canvas.fill([0,0,0])
         for i in range(self.commandLineHistoryLength):
-            self.commandLine.longHistory.canvas.blit(self.font.font.render(str(self.commandLineHistory[i]),True,[255,255,255]),(0,i*self.font.sizeOf("L")[1]))
+            if self.commandLineHistory[i] == None:
+                self.commandLine.longHistory.canvas.blit(self.font.font.render("...",True,[255,255,255]),(0,i*self.font.sizeOf("L")[1]))
+            else:
+                self.commandLine.longHistory.canvas.blit(self.font.font.render(str(self.commandLineHistory[i]),True,[255,255,255]),(0,i*self.font.sizeOf("L")[1]))
 
     def resizeOnKey(self,dict):
         self.reBuildInterface()
@@ -92,22 +96,62 @@ class Application():
     def createPhysObject(self,name):
         if not name in self.physObjects:
             self.physObjects[name] = PhysObject()
+            self.physObjects[name].name = name
             return True
         else:
             return False,"Object already exists"
+        
+    def deletePhysObject(self,name):
+        del self.physObjects[name]
 
     def parseCommandline(self,cinput):
-        self.commandLineHistory.insert(0,cinput)
-        self.commandLineHistory.pop(self.commandLineHistoryLength)
-
+        """
         command = cinput.split(" ")
         target = command[0].lower()
 
         if target == "new":
             name = command[1]
             self.createPhysObject(name)
+            
+        elif target == "set":
+            name = command[1]
+            attrib = command[2]
+            value = command[3].split(",")
+            print(value)
+            self.physObjects[name].__dict__[attrib] = libUI.pygame.math.Vector2(float(value[0]),float(value[1]))
+        """
 
+        command = parseCommand(cinput)
+        output = ""
+
+        if command[0] == "new":
+            self.createPhysObject(command[1])
+        
+        elif command[0] == "set":
+            try:
+                self.physObjects[command[1]].__dict__[command[2]] = libUI.pygame.math.Vector2(float(command[3].split(",")[0]),float(command[3].split(",")[1]))
+            except KeyError:
+                output += f" >> name {command[1]} is not defined"
+
+        elif command[0] == "delete":
+            self.deletePhysObject(command[1])
+
+        self.commandLineHistory.insert(0,cinput + output)
+        self.commandLineHistory.pop(self.commandLineHistoryLength)
         self.redrawCommandHistory()
+
+    def translatePhysToScreen(self,po):
+        a = po
+        # 1 pixel / 1 cm
+        a.position = a.position * 100
+        a.size = a.size * 100
+        return a
+    
+    def backTranslate(self,po):
+        a = po
+        # 1 pixel / 1 cm
+        a.position = a.position / 100
+        a.size = a.size / 100
 
     def run(self):
         while self.app.update():
@@ -122,7 +166,12 @@ class Application():
                 po = self.physObjects[o]
                 po.step(self.app.dt)
 
-                libUI.pygame.draw.rect(self.workspace.canvas.canvas,[255,0,0],(po.position,po.size))
+                to = self.translatePhysToScreen(po)
+
+                libUI.pygame.draw.rect(self.workspace.canvas.canvas,[255,0,0],(to.position,to.size))
+                self.workspace.canvas.canvas.blit(self.smallFont.font.render(po.name,True,[255,255,255]),(to.position))
+
+                self.backTranslate(po)
 
             self.mainLayer.draw()
             self.canvas.draw()

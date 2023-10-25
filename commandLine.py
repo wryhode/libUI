@@ -7,4 +7,20 @@ def parseCommand(command):
 
     inp = command.split(" ")
     
-    cmd._parameters[]
+    """
+    if len(inp) > 0:
+        cmd.command = inp[0]
+
+        if len(inp) > 1:
+            cmd.name = inp[1]
+
+            if len(inp) > 2:
+                cmd.attribute = inp[2]
+    """
+
+    params = []
+    while len(inp) > 0:
+        params.append(inp[0])
+        inp.pop(0)
+    
+    return params
