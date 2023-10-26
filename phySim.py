@@ -65,6 +65,7 @@ class Application():
         self.objectsMenu.canvas = self.app.Canvas(self.UIsizing.objectsMenuSize,[0,0],self.sideBar.canvas)
         self.objectsMenu.header = self.app.Canvas(self.UIsizing.objectsMenuItemSize,[0,0],self.objectsMenu.canvas)
         self.objectsMenu.header.canvas.fill([25,25,25])
+        self.objectsMenu.slider = self.app.Slider([self.objectsMenu.canvas.rect.width-25,self.UIsizing.objectsMenuItemSize[1],25,self.objectsMenu.canvas.rect.height-self.UIsizing.objectsMenuItemSize[1]],True,self.canvas)
         libUI.pygame.draw.rect(self.objectsMenu.header.canvas,[114,114,114],self.objectsMenu.header.rect,1)
 
         self.propertyMenu = self.app.ElementCollection()
@@ -129,9 +130,20 @@ class Application():
         
         elif command[0] == "set":
             try:
-                self.physObjects[command[1]].__dict__[command[2]] = libUI.pygame.math.Vector2(float(command[3].split(",")[0]),float(command[3].split(",")[1]))
+                po = self.physObjects[command[1]]
             except KeyError:
                 output += f" >> name {command[1]} is not defined"
+                return
+            try:
+                pd = self.physObjects[command[1]].__dict__[command[2]]
+            except KeyError:
+                output += f" >> parameter {command[2]} is not defined"
+                return
+            try:
+                pd = self.physObjects[command[1]].__dict__[command[2]] = command[3]
+            except :
+                output += f" >> parameter {command[3]} is of wrong data type"
+                return
 
         elif command[0] == "delete":
             self.deletePhysObject(command[1])
@@ -147,6 +159,7 @@ class Application():
         a.size = a.size * 100
         return a
     
+    # This is incredibly stupid, but botches will be botchin'
     def backTranslate(self,po):
         a = po
         # 1 pixel / 1 cm
