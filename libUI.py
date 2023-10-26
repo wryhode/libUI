@@ -15,7 +15,7 @@ except ImportError:
         import pygame
     
     else:
-        print("Ok. Type 'pip install pygame' to install it later.")
+        print("Got it! Type 'pip install pygame' to install it later.")
         exit()
 
 # Assume all went well

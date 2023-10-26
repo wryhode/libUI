@@ -1,3 +1,9 @@
+# --------
+#   title:      phySim
+#   version:    beta version 0
+#   author:     wryhode       
+# --------
+
 import libUI
 import unitConverter
 from phys import PhysObject
@@ -148,6 +154,9 @@ class Application():
         elif command[0] == "delete":
             self.deletePhysObject(command[1])
 
+        elif command[0] == "display":
+            self.physObjects[command[1]].attribs_to_display.append(command[2])
+
         self.commandLineHistory.insert(0,cinput + output)
         self.commandLineHistory.pop(self.commandLineHistoryLength)
         self.redrawCommandHistory()
@@ -165,7 +174,7 @@ class Application():
         # 1 pixel / 1 cm
         a.position = a.position / 100
         a.size = a.size / 100
-
+     
     def run(self):
         while self.app.update():
             self.mainUpdateLayer.update(self.app)
@@ -183,6 +192,10 @@ class Application():
 
                 libUI.pygame.draw.rect(self.workspace.canvas.canvas,[255,0,0],(to.position,to.size))
                 self.workspace.canvas.canvas.blit(self.smallFont.font.render(po.name,True,[255,255,255]),(to.position))
+
+                for i,t in enumerate(po.attribs_to_display):
+                    self.workspace.canvas.canvas.blit(self.smallFont.font.render(str(po.__dict__[t]),True,[255,255,255]),(to.position[0],to.position[1]+((i+1)*self.smallFont.sizeOf("L")[1])))
+
 
                 self.backTranslate(po)
 

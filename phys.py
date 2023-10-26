@@ -15,6 +15,8 @@ class PhysObject():
         if startparams != None:
             self.__dict__ == startparams
 
+        self.attribs_to_display = []
+
     def force_friction(self):
         pass
 

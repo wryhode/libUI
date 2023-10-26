@@ -29,7 +29,7 @@ def parseCommand(command):
         elif parameter.isnumeric():
             parameter = float(parameter)
         else:
-            pass
+            pass # Let it stay as a string
         params.append(parameter)
         inp.pop(0)
     
