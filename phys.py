@@ -25,6 +25,6 @@ class PhysObject():
         self.position += self.velocity * deltaTime
         self.localtime += deltaTime
 
-class World():
+class PhysWorld():
     def __init__(self):
         self.gravity_accel = Vector2(0,9.81)

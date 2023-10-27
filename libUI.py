@@ -1,3 +1,23 @@
+global veryVerbose, logLoopable
+veryVerbose = True
+logLoopable = False
+
+class Logger():
+    def __init__(self):
+        self.print_logged = True
+        self.readableFile = open("./log.txt","w")
+        #self.unreadableFile = open("./log_sim.txt","w") # Maybe for a step-by step debugger type thing in the future
+
+    def log(self,message):
+        self.readableFile.write(message+"\n")
+        if self.print_logged: print(message)
+
+    def stop(self):
+        self.file.close()
+
+logger = Logger()
+log = logger.log
+
 # Tiny self-installer if the user doesn't have pygame installed
 try:
     import pygame
@@ -31,24 +51,30 @@ class Application():
             self.framerate = 60
             self.frame = 0
             self.canvas = pygame.display.set_mode(self.resolution,flags)
+            if veryVerbose: log(f"WINDOW: New window. res:{self.resolution} ft:{self.framerate} fl:{self.flags}")
 
         def setTitle(self,title):
+            if veryVerbose: log(f"WINDOW: Set window title to {title}")
             pygame.display.set_caption(str(title))
 
     class Image():
         def __init__(self,path):
             try:
                 self.sourceImage = pygame.image.load(path)
+                if veryVerbose: log(f"IMAGE: New image {path}")
             except FileExistsError:
                 self.sourceImage = pygame.Surface([64,64])
                 self.sourceImage.fill([255,0,255])
+                if veryVerbose: log(f"IMAGE: New image (path not found)")
 
         @property
         def image(self):
+            if veryVerbose & logLoopable: log(f"IMAGE: Get image")
             return self.sourceImage
         
         @property
         def size(self):
+            if veryVerbose & logLoopable: log(f"IMAGE: Get size")
             return self.sourceImage.get_size()
             
     class Canvas():
@@ -56,6 +82,7 @@ class Application():
             self.rect = pygame.Rect(position,resolution)
             self.parent = parent
             self.canvas = pygame.Surface(self.resolution)
+            if veryVerbose: log(f"CANVAS: New canvas. rect:{self.rect} p:{self.parent}")
             
         def draw(self):
             bp = self.position
@@ -66,24 +93,29 @@ class Application():
         
         @property
         def c(self):
+            if veryVerbose & logLoopable: log(f"CANVAS: Get canvas")
             return self.canvas
             
         @property
         def resolution(self):
+            if veryVerbose & logLoopable: log(f"CANVAS: Get resolution")
             return self.rect.size
          
         @property
         def position(self):
+            if veryVerbose & logLoopable: log(f"CANVAS: Get position")
             return self.rect.topleft
             
         @position.setter
         def position(self,position):
             self.rect.topleft = position
+            if veryVerbose & logLoopable: log(f"CANVAS: Set position {position}")
                     
         @resolution.setter
         def resolution(self,resolution):
             self.rect.size = resolution
             self.canvas = pygame.Surface(resolution)
+            if veryVerbose & logLoopable: log(f"CANVAS: Set resolution {resolution}")
             
         def update(self):
             pass
@@ -95,24 +127,29 @@ class Application():
             self.parent = parent
             
             pygame.sprite.Sprite.__init__(self)
+            if veryVerbose: log(f"SPRITE: New sprite. rect:{self.rect} image:{self.image} p:{self.parent}")
             
         def draw(self):
             self.parent.canvas.blit(self.image,self.position)
         
         @property
         def canvas(self):
+            if veryVerbose & logLoopable: log("SPRITE: Get canvas")
             return self.image
             
         @canvas.setter
         def canvas(self,img):
             self.image = img
+            if veryVerbose & logLoopable: log(f"SPRITE: Set canvas {img}")
         
         @property
         def position(self):
+            if veryVerbose & logLoopable: log(f"SPRITE: Get position")
             return self.rect.topleft
         
         @property
         def resolution(self):
+            if veryVerbose & logLoopable: log(f"SPRITE: get size")
             return self.rect.size
     
     class Button(Sprite):
@@ -125,6 +162,7 @@ class Application():
             self.held = False
             self.touchPosition = [0,0]
             self.reDrew = False
+            if veryVerbose: log(f"BUTTON: New button. rect:{self.rect} p:{self.parent}")
 
         def drawPressed(self):
             self.canvas.fill([25,25,25])
@@ -161,6 +199,7 @@ class Application():
     class Font():
         def __init__(self,path,size):
             self.font = pygame.font.Font(path,size)
+            if veryVerbose: log(f"FONT: New font. path:{path} size:{size}")
 
         def sizeOf(self,input):
             return self.font.size(str(input))
@@ -175,6 +214,7 @@ class Application():
             self.parent = parent
 
             self.reDraw()
+            if veryVerbose: log(f"TEXT: New text. font:{font} txt:{text} color:{color} rect:{self.rect} p:{self.parent}")
 
         def reDraw(self):
             self.canvas = self.font.font.render(str(self.text),True,self.color)
@@ -195,6 +235,7 @@ class Application():
             
         @property
         def position(self):
+            if veryVerbose: log("TEXT: Get position")
             return self.rect.topleft
 
     class TextInput(Button):
@@ -591,6 +632,7 @@ class Application():
         pygame.display.update()
     
     def quit(self):
+        logger.stop()
         pygame.quit()
         
     def resize(self,newResolution):

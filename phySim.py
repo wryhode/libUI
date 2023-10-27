@@ -6,7 +6,7 @@
 
 import libUI
 import unitConverter
-from phys import PhysObject
+from phys import PhysObject, PhysWorld
 from commandLine import parseCommand
 
 class Application():
@@ -71,7 +71,8 @@ class Application():
         self.objectsMenu.canvas = self.app.Canvas(self.UIsizing.objectsMenuSize,[0,0],self.sideBar.canvas)
         self.objectsMenu.header = self.app.Canvas(self.UIsizing.objectsMenuItemSize,[0,0],self.objectsMenu.canvas)
         self.objectsMenu.header.canvas.fill([25,25,25])
-        self.objectsMenu.slider = self.app.Slider([self.objectsMenu.canvas.rect.width-25,self.UIsizing.objectsMenuItemSize[1],25,self.objectsMenu.canvas.rect.height-self.UIsizing.objectsMenuItemSize[1]],True,self.canvas)
+        self.objectsMenu.scrollCanvas = self.app.Canvas([self.UIsizing.objectsMenuSize[0],self.UIsizing.objectsMenuItemSize[1]*20],[0,self.UIsizing.objectsMenuItemSize[1]],self.objectsMenu.canvas)
+        self.objectsMenu.slider = self.app.Slider([0,self.UIsizing.objectsMenuItemSize[1],25,self.objectsMenu.canvas.rect.height-self.UIsizing.objectsMenuItemSize[1]],True,self.sideBar.canvas)
         libUI.pygame.draw.rect(self.objectsMenu.header.canvas,[114,114,114],self.objectsMenu.header.rect,1)
 
         self.propertyMenu = self.app.ElementCollection()
@@ -107,7 +108,7 @@ class Application():
             return True
         else:
             return False,"Object already exists"
-        
+
     def deletePhysObject(self,name):
         del self.physObjects[name]
 
@@ -136,17 +137,17 @@ class Application():
         
         elif command[0] == "set":
             try:
-                po = self.physObjects[command[1]]
+                self.physObjects[command[1]]
             except KeyError:
                 output += f" >> name {command[1]} is not defined"
                 return
             try:
-                pd = self.physObjects[command[1]].__dict__[command[2]]
+                self.physObjects[command[1]].__dict__[command[2]]
             except KeyError:
                 output += f" >> parameter {command[2]} is not defined"
                 return
             try:
-                pd = self.physObjects[command[1]].__dict__[command[2]] = command[3]
+                self.physObjects[command[1]].__dict__[command[2]] = command[3]
             except :
                 output += f" >> parameter {command[3]} is of wrong data type"
                 return
@@ -155,7 +156,10 @@ class Application():
             self.deletePhysObject(command[1])
 
         elif command[0] == "display":
-            self.physObjects[command[1]].attribs_to_display.append(command[2])
+            if command[1] == "off":
+                self.physObjects[command[2]].attribs_to_display.remove(command[3])
+            else:
+                self.physObjects[command[1]].attribs_to_display.append(command[2])
 
         self.commandLineHistory.insert(0,cinput + output)
         self.commandLineHistory.pop(self.commandLineHistoryLength)
@@ -167,14 +171,14 @@ class Application():
         a.position = a.position * 100
         a.size = a.size * 100
         return a
-    
+
     # This is incredibly stupid, but botches will be botchin'
     def backTranslate(self,po):
         a = po
         # 1 pixel / 1 cm
         a.position = a.position / 100
         a.size = a.size / 100
-     
+
     def run(self):
         while self.app.update():
             self.mainUpdateLayer.update(self.app)
@@ -195,7 +199,6 @@ class Application():
 
                 for i,t in enumerate(po.attribs_to_display):
                     self.workspace.canvas.canvas.blit(self.smallFont.font.render(str(po.__dict__[t]),True,[255,255,255]),(to.position[0],to.position[1]+((i+1)*self.smallFont.sizeOf("L")[1])))
-
 
                 self.backTranslate(po)
 

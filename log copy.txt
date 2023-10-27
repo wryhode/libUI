@@ -1,0 +1,23 @@
+WINDOW: New window. res:[1777, 1000] ft:60 fl:16
+WINDOW: Set window title to libUI Application
+CANVAS: New canvas. rect:<rect(0, 0, 1777, 1000)> p:<libUI.Application.Window object at 0x000001C34BA4EF90>
+FONT: New font. path:./Rubik-Regular.ttf size:32
+FONT: New font. path:./Rubik-Regular.ttf size:16
+FONT: New font. path:./Rubik-Regular.ttf size:62
+CANVAS: New canvas. rect:<rect(0, 0, 1332, 200)> p:<libUI.Application.Canvas object at 0x000001C363098510>
+CANVAS: New canvas. rect:<rect(0, 0, 1332, 160)> p:<libUI.Application.Canvas object at 0x000001C363098510>
+CANVAS: New canvas. rect:<rect(0, 0, 1332, 950)> p:<libUI.Application.Canvas object at 0x000001C36315C590>
+SPRITE: New sprite. rect:<rect(1307, 0, 25, 161)> image:<Surface(25x161x32 SW)> p:<libUI.Application.Canvas object at 0x000001C363098510>
+BUTTON: New button. rect:<rect(1307, 0, 25, 161)> p:<libUI.Application.Canvas object at 0x000001C363098510>
+SPRITE: New sprite. rect:<rect(0, 0, 25, 25)> image:<Surface(25x25x32 SW)> p:<Slider Sprite(in 0 groups)>
+SPRITE: New sprite. rect:<rect(0, 160, 1332, 40)> image:<Surface(1332x40x32 SW)> p:<libUI.Application.Canvas object at 0x000001C362C1DA50>
+BUTTON: New button. rect:<rect(0, 160, 1332, 40)> p:<libUI.Application.Canvas object at 0x000001C362C1DA50>
+CANVAS: New canvas. rect:<rect(1332, 0, 444, 1000)> p:<libUI.Application.Canvas object at 0x000001C363098510>
+CANVAS: New canvas. rect:<rect(0, 0, 444, 500)> p:<libUI.Application.Canvas object at 0x000001C3631CA010>
+CANVAS: New canvas. rect:<rect(0, 0, 444, 50)> p:<libUI.Application.Canvas object at 0x000001C3631CA190>
+CANVAS: New canvas. rect:<rect(0, 50, 444, 1000)> p:<libUI.Application.Canvas object at 0x000001C3631CA190>
+SPRITE: New sprite. rect:<rect(0, 50, 25, 450)> image:<Surface(25x450x32 SW)> p:<libUI.Application.Canvas object at 0x000001C3631CA010>
+BUTTON: New button. rect:<rect(0, 50, 25, 450)> p:<libUI.Application.Canvas object at 0x000001C3631CA010>
+SPRITE: New sprite. rect:<rect(0, 0, 25, 25)> image:<Surface(25x25x32 SW)> p:<Slider Sprite(in 0 groups)>
+CANVAS: New canvas. rect:<rect(0, 750, 1332, 250)> p:<libUI.Application.Canvas object at 0x000001C363098510>
+CANVAS: New canvas. rect:<rect(0, 200, 1332, 550)> p:<libUI.Application.Canvas object at 0x000001C363098510>

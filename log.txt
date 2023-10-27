@@ -1,0 +1,2 @@
+WINDOW: New window. res:[200, 200] ft:60 fl:0
+WINDOW: Set window title to libUI Application
