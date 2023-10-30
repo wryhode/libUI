@@ -161,6 +161,9 @@ class Application():
             else:
                 self.physObjects[command[1]].attribs_to_display.append(command[2])
 
+        elif command[0] == "function":
+            pass
+
         self.commandLineHistory.insert(0,cinput + output)
         self.commandLineHistory.pop(self.commandLineHistoryLength)
         self.redrawCommandHistory()

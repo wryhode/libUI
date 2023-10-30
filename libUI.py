@@ -123,7 +123,7 @@ class Application():
     class Sprite(pygame.sprite.Sprite):
         def __init__(self, rect, parent):
             self.rect = pygame.Rect(rect)
-            self.image = pygame.Surface(self.rect.size)
+            self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA)
             self.parent = parent
             
             pygame.sprite.Sprite.__init__(self)

@@ -11,6 +11,7 @@ class PhysObject():
         self.size = Vector2(1,1)
         self.mass = 1
         self.friction = 0.5
+        self.run = False
 
         if startparams != None:
             self.__dict__ == startparams
@@ -21,9 +22,9 @@ class PhysObject():
         pass
 
     def step(self,deltaTime):
-        self.velocity += self.acceleration * deltaTime
-        self.position += self.velocity * deltaTime
-        self.localtime += deltaTime
+        self.velocity += (self.acceleration * deltaTime) * self.run
+        self.position += (self.velocity * deltaTime) * self.run
+        self.localtime += deltaTime * self.run
 
 class PhysWorld():
     def __init__(self):
