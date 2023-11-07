@@ -6,7 +6,7 @@
 
 import libUI
 import unitConverter
-from phys import PhysObject, PhysWorld
+from phys import PhysObject, PhysWorld, userforces
 from commandLine import parseCommand
 
 class Application():
@@ -28,6 +28,7 @@ class Application():
         self.commandLineHistoryLength = 25
         self.commandLineHistory = [None] * self.commandLineHistoryLength
 
+        self.physWorld = PhysWorld()
         self.physObjects = {}
 
         self.reBuildInterface()
@@ -103,11 +104,18 @@ class Application():
 
     def createPhysObject(self,name):
         if not name in self.physObjects:
-            self.physObjects[name] = PhysObject()
+            self.physObjects[name] = PhysObject(parentworld=self.physWorld)
             self.physObjects[name].name = name
             return True
         else:
             return False,"Object already exists"
+
+    def createForce(self,name,function):
+        if not name in userforces:
+            userforces[name] = function
+            return True
+        else:
+            return False,"Function already exists"
 
     def deletePhysObject(self,name):
         del self.physObjects[name]
@@ -133,7 +141,10 @@ class Application():
         output = ""
 
         if command[0] == "new":
-            self.createPhysObject(command[1])
+            if command[1].lower() == "force":
+                self.createForce(command[2],command[3])
+            else:
+                self.createPhysObject(command[1])
         
         elif command[0] == "set":
             try:
@@ -171,16 +182,16 @@ class Application():
     def translatePhysToScreen(self,po):
         a = po
         # 1 pixel / 1 cm
-        a.position = a.position * 100
-        a.size = a.size * 100
+        a.position = a.position * 10
+        a.size = a.size * 10
         return a
 
     # This is incredibly stupid, but botches will be botchin'
     def backTranslate(self,po):
         a = po
         # 1 pixel / 1 cm
-        a.position = a.position / 100
-        a.size = a.size / 100
+        a.position = a.position / 10
+        a.size = a.size / 10
 
     def run(self):
         while self.app.update():
@@ -198,6 +209,10 @@ class Application():
                 to = self.translatePhysToScreen(po)
 
                 libUI.pygame.draw.rect(self.workspace.canvas.canvas,[255,0,0],(to.position,to.size))
+                libUI.pygame.draw.line(self.workspace.canvas.canvas,[0,255,0],to.position,to.position+to.velocity*40)
+                libUI.pygame.draw.line(self.workspace.canvas.canvas,[255,0,0],to.position,to.position+to.acceleration*40)
+                libUI.pygame.draw.line(self.workspace.canvas.canvas,[255,255,255],to.position,to.position+to.f_sum*40)
+
                 self.workspace.canvas.canvas.blit(self.smallFont.font.render(po.name,True,[255,255,255]),(to.position))
 
                 for i,t in enumerate(po.attribs_to_display):

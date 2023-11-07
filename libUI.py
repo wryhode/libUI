@@ -4,9 +4,9 @@ logLoopable = False
 
 class Logger():
     def __init__(self):
-        self.print_logged = True
+        self.print_logged = False
         self.readableFile = open("./log.txt","w")
-        #self.unreadableFile = open("./log_sim.txt","w") # Maybe for a step-by step debugger type thing in the future
+        #self.unreadableFile = open("./log_sim.txt","w") # Maybe for a step-by step debugger thing in the future
 
     def log(self,message):
         self.readableFile.write(message+"\n")
