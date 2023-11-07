@@ -467,6 +467,12 @@ class Application():
         def __init__(self):
             pass
 
+        def update(self):
+            pass
+
+        def draw(self):
+            pass
+
     class Utils():
         """Handy functions"""
         def __init__(self):

@@ -30,6 +30,8 @@ class Application():
 
         self.physWorld = PhysWorld()
         self.physObjects = {}
+        self.cmPerPixel = 25
+        self.workspaceOriginOffset = libUI.pygame.math.Vector2(0,0)
 
         self.reBuildInterface()
 
@@ -43,7 +45,8 @@ class Application():
         self.UIsizing.sideBarSize = self.app.utils.fracDomain([1-self.UIsizing.vertSplit,1],self.app.window.resolution)
         self.UIsizing.sideBarPosition = self.app.utils.fracDomain([self.UIsizing.vertSplit,0],self.app.window.resolution)
         self.UIsizing.objectsMenuSize = self.app.utils.fracDomain([1,self.UIsizing.objectsMenuHeight],self.UIsizing.sideBarSize)
-        self.UIsizing.objectsMenuItemSize = self.app.utils.fracDomain([1,1/self.UIsizing.objectsMenuNumItems],self.UIsizing.objectsMenuSize)
+        self.UIsizing.objectsMenuItemSize = self.app.utils.fracDomain([1,1/self.UIsizing.objectsMenuNumItems],[self.UIsizing.objectsMenuSize[0]-25,self.UIsizing.objectsMenuSize[1]])
+        self.UIsizing.objectsMenuHeaderSize = self.app.utils.fracDomain([1,1/self.UIsizing.objectsMenuNumItems],self.UIsizing.objectsMenuSize)
         self.UIsizing.propertyMenuPosition = self.app.utils.fracDomain([0,1-self.UIsizing.propertyMenuHeight],self.app.window.resolution)
         self.UIsizing.propertyMenuSize = self.app.utils.fracDomain([self.UIsizing.vertSplit,self.UIsizing.propertyMenuHeight],self.app.window.resolution)
         self.UIsizing.workspaceSize = self.app.utils.fracDomain([self.UIsizing.vertSplit,1-(self.UIsizing.commandLineHeight+self.UIsizing.propertyMenuHeight)],self.app.window.resolution)
@@ -70,11 +73,13 @@ class Application():
 
         self.objectsMenu = self.app.ElementCollection()
         self.objectsMenu.canvas = self.app.Canvas(self.UIsizing.objectsMenuSize,[0,0],self.sideBar.canvas)
-        self.objectsMenu.header = self.app.Canvas(self.UIsizing.objectsMenuItemSize,[0,0],self.objectsMenu.canvas)
+        self.objectsMenu.header = self.app.Canvas(self.UIsizing.objectsMenuHeaderSize,[0,0],self.objectsMenu.canvas)
         self.objectsMenu.header.canvas.fill([25,25,25])
-        self.objectsMenu.scrollCanvas = self.app.Canvas([self.UIsizing.objectsMenuSize[0],self.UIsizing.objectsMenuItemSize[1]*20],[0,self.UIsizing.objectsMenuItemSize[1]],self.objectsMenu.canvas)
+        self.objectsMenu.scrollCanvas = self.app.Canvas([self.UIsizing.objectsMenuSize[0],self.UIsizing.objectsMenuItemSize[1]*20],[25,self.UIsizing.objectsMenuItemSize[1]],self.objectsMenu.canvas)
         self.objectsMenu.slider = self.app.Slider([0,self.UIsizing.objectsMenuItemSize[1],25,self.objectsMenu.canvas.rect.height-self.UIsizing.objectsMenuItemSize[1]],True,self.sideBar.canvas)
         libUI.pygame.draw.rect(self.objectsMenu.header.canvas,[114,114,114],self.objectsMenu.header.rect,1)
+        self.objectsMenu.header.canvas.blit(self.font.font.render("Objects",True,[255,255,255]),[0,0])
+        self.redrawObjects()
 
         self.propertyMenu = self.app.ElementCollection()
         self.propertyMenu.canvas = self.app.Canvas(self.UIsizing.propertyMenuSize,self.UIsizing.propertyMenuPosition,self.canvas)
@@ -83,6 +88,7 @@ class Application():
         self.workspace = self.app.ElementCollection()
         self.workspace.canvas = self.app.Canvas(self.UIsizing.workspaceSize,self.UIsizing.workspacePosition,self.canvas)
         self.workspace.canvas.canvas.fill([33,33,33])
+        self.workspace.gridCanvas = self.app.Canvas(self.UIsizing.workspaceSize,[0,0],self.workspace.canvas)
 
         self.mainLayer.addElementCollection(self.commandLine)
         self.mainLayer.addElementCollection(self.objectsMenu)
@@ -90,6 +96,20 @@ class Application():
         self.mainLayer.addElementCollection(self.propertyMenu)
         self.mainLayer.addElementCollection(self.workspace)
         self.mainUpdateLayer.addCloneFromLayer(self.mainLayer)
+
+    def drawObjectsMenuItem(self,size):
+        canvas = self.app.Canvas(size,[0,0],None)
+        libUI.pygame.draw.rect(canvas.canvas,[114,114,114],[[0,0],size],1)
+        return canvas
+
+    def redrawObjects(self):
+        self.objectsMenu.scrollCanvas.canvas.fill([0,0,0])
+        self.objectsMenu.objectSelectors = self.app.ElementCollection()
+        self.objectsMenu.objectSelectors.buttons = []
+        baseCanvas = self.drawObjectsMenuItem(self.UIsizing.objectsMenuItemSize)
+        for i,o in enumerate(self.physObjects):
+            self.objectsMenu.objectSelectors.buttons.append(self.app.Button([[0,i*self.UIsizing.objectsMenuItemSize[1]-1],self.UIsizing.objectsMenuItemSize],self.objectsMenu.scrollCanvas))
+            self.objectsMenu.scrollCanvas.canvas.blit(baseCanvas.canvas,[0,i*self.UIsizing.objectsMenuItemSize[1]-1])
 
     def redrawCommandHistory(self):
         self.commandLine.longHistory.canvas.fill([0,0,0])
@@ -99,6 +119,21 @@ class Application():
             else:
                 self.commandLine.longHistory.canvas.blit(self.font.font.render(str(self.commandLineHistory[i]),True,[255,255,255]),(0,i*self.font.sizeOf("L")[1]))
 
+    def clearWorkspace(self):
+        self.drawWorkspaceGrid()
+        self.workspace.canvas.canvas.blit(self.workspace.gridCanvas.canvas,[0,0])
+
+    def drawWorkspaceGrid(self):
+        self.workspace.gridCanvas.canvas.fill([33,33,33])
+        wsRect = self.workspace.gridCanvas.rect
+        value = self.cmPerPixel
+        for y in range(0,wsRect.height,value):
+            coord = y - self.workspaceOriginOffset.y % self.cmPerPixel
+            libUI.pygame.draw.line(self.workspace.gridCanvas.canvas,[66,66,66],[0,coord],[wsRect.width,coord])
+        for x in range(0,wsRect.width,value):
+            coord = x - self.workspaceOriginOffset.x % self.cmPerPixel
+            libUI.pygame.draw.line(self.workspace.gridCanvas.canvas,[66,66,66],[coord,0],[coord,wsRect.height])
+
     def resizeOnKey(self,dict):
         self.reBuildInterface()
 
@@ -106,6 +141,7 @@ class Application():
         if not name in self.physObjects:
             self.physObjects[name] = PhysObject(parentworld=self.physWorld)
             self.physObjects[name].name = name
+            self.redrawObjects()
             return True
         else:
             return False,"Object already exists"
@@ -182,45 +218,59 @@ class Application():
     def translatePhysToScreen(self,po):
         a = po
         # 1 pixel / 1 cm
-        a.position = a.position * 10
-        a.size = a.size * 10
+        a.position = a.position * self.cmPerPixel
+        a.size = a.size * self.cmPerPixel
         return a
 
     # This is incredibly stupid, but botches will be botchin'
     def backTranslate(self,po):
         a = po
         # 1 pixel / 1 cm
-        a.position = a.position / 10
-        a.size = a.size / 10
+        a.position = a.position / self.cmPerPixel
+        a.size = a.size / self.cmPerPixel
+
+    def worldToScreen(self,coord):
+        return libUI.pygame.math.Vector2(coord - self.workspaceOriginOffset)
 
     def run(self):
         while self.app.update():
+            for e in self.app.events:
+                if e.type == libUI.pygame.MOUSEWHEEL:
+                    self.cmPerPixel += e.y
+                    if self.cmPerPixel < 1: self.cmPerPixel = 1
+
+            if self.app.mouse.buttons[1]:
+                self.workspaceOriginOffset -= libUI.pygame.math.Vector2(self.app.mouse.speed)
+
             self.mainUpdateLayer.update(self.app)
             self.canvas.clear([33,33,33])
 
             # Scroll commandline history
             self.commandLine.longHistory.rect.y = -self.commandLine.slider.value * (self.commandLine.longHistory.rect.height-self.commandLine.history.rect.height)
 
-            self.workspace.canvas.canvas.fill([33,33,33])
+            self.clearWorkspace()
             for o in self.physObjects:
                 po = self.physObjects[o]
                 po.step(self.app.dt)
 
                 to = self.translatePhysToScreen(po)
 
-                libUI.pygame.draw.rect(self.workspace.canvas.canvas,[255,0,0],(to.position,to.size))
-                libUI.pygame.draw.line(self.workspace.canvas.canvas,[0,255,0],to.position,to.position+to.velocity*40)
-                libUI.pygame.draw.line(self.workspace.canvas.canvas,[255,0,0],to.position,to.position+to.acceleration*40)
-                libUI.pygame.draw.line(self.workspace.canvas.canvas,[255,255,255],to.position,to.position+to.f_sum*40)
+                objectPos = self.worldToScreen(to.position)
+                libUI.pygame.draw.rect(self.workspace.canvas.canvas,[255,0,0],(objectPos,to.size))
+                libUI.pygame.draw.line(self.workspace.canvas.canvas,[0,255,0],objectPos,objectPos+to.velocity*40)
+                libUI.pygame.draw.line(self.workspace.canvas.canvas,[255,0,0],objectPos,objectPos+to.acceleration*40)
+                libUI.pygame.draw.line(self.workspace.canvas.canvas,[255,255,255],objectPos,objectPos+to.f_sum*40)
 
-                self.workspace.canvas.canvas.blit(self.smallFont.font.render(po.name,True,[255,255,255]),(to.position))
+                self.workspace.canvas.canvas.blit(self.smallFont.font.render(po.name,True,[255,255,255]),(objectPos))
 
                 for i,t in enumerate(po.attribs_to_display):
-                    self.workspace.canvas.canvas.blit(self.smallFont.font.render(str(po.__dict__[t]),True,[255,255,255]),(to.position[0],to.position[1]+((i+1)*self.smallFont.sizeOf("L")[1])))
+                    self.workspace.canvas.canvas.blit(self.smallFont.font.render(str(po.__dict__[t]),True,[255,255,255]),(objectPos.x,objectPos.y+((i+1)*self.smallFont.sizeOf("L")[1])))
 
                 self.backTranslate(po)
 
             self.mainLayer.draw()
+            if self.app.mouse.buttons[1]:
+                self.canvas.canvas.blit(self.font.font.render(str(self.workspaceOriginOffset),True,[255,255,255]),(0,0))
             self.canvas.draw()
             self.app.draw()
 

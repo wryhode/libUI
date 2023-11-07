@@ -50,8 +50,7 @@ class PhysObject():
         self.attribs_to_display = []
 
         self.forces = {
-            "G":"G",
-            "-F":"-F"
+            "G":"G"
         }
 
         self.toLog = []
@@ -141,7 +140,7 @@ class PhysObject():
 class PhysWorld():
     def __init__(self):
         self.gravity_accel = Vector2(0,9.81)
-        self.mass_density = 0.988
+        self.mass_density = 1.225
 
 if __name__ == "__main__":
     w = PhysWorld()
