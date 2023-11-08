@@ -37,8 +37,9 @@ class PhysObject():
         self.velocity = Vector2(0,0)        # m/s
         self.acceleration = Vector2(0,0)    # m/s^2
         self.size = Vector2(1,1)            # m - visual size
-        self.mass = 1                       # kg
-        self.volume = 1                     # m^3
+        self.depth = 1                      # Z "depth" - sets volume
+        self.volume = self.size.x * self.size.y * self.depth    # initial value is decided by visual size
+        self.mass = 100                     # kg
         self.friction = 0.5                 # 
         self.airresistance = 1.02           # 
         self.run = False                    # simulate?
@@ -50,7 +51,8 @@ class PhysObject():
         self.attribs_to_display = []
 
         self.forces = {
-            "G":"G"
+            "G":"G",
+            "-F":"-F"
         }
 
         self.toLog = []
