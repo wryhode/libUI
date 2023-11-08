@@ -251,7 +251,8 @@ class Application():
             self.clearWorkspace()
             for o in self.physObjects:
                 po = self.physObjects[o]
-                po.step(self.app.dt)
+                for i in range(100):
+                    po.step(self.app.dt / 100)
 
                 to = self.translatePhysToScreen(po)
 

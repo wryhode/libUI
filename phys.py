@@ -8,18 +8,20 @@ forces_unit_conversions = {
     "f":"friction",
     "V":"volume",
     "v":"velocity",
-    "k":"airresistance"
+    "k":"airresistance",
+    "e_x":"e_x",
+    "e_y":"e_y"
 }
 
 forces_standard = {
     "G":"m*g",
     "B":"ro*V*g",
-    "N":"G",
+    "N":"-G",
     "R":"f*N",
     "F":"k*v**2",
     "-G":"-m*g",
     "-B":"-ro*V*g",
-    "-N":"-G",
+    "-N":"G",
     "-R":"-f*N",
     "-F":"-(k*v**2)"
 }
@@ -39,11 +41,13 @@ class PhysObject():
         self.size = Vector2(1,1)            # m - visual size
         self.depth = 1                      # Z "depth" - sets volume
         self.volume = self.size.x * self.size.y * self.depth    # initial value is decided by visual size
-        self.mass = 100                     # kg
+        self.mass = 10                     # kg
         self.friction = 0.5                 # 
         self.airresistance = 1.02           # 
         self.run = False                    # simulate?
         self.parentworld = parentworld      # to get gravity etc.
+        self.e_x = Vector2(1,0)
+        self.e_y = Vector2(0,1)
         self.f_sum = Vector2(0,0)
         if startparams != None:
             self.__dict__ == startparams
@@ -52,7 +56,9 @@ class PhysObject():
 
         self.forces = {
             "G":"G",
-            "-F":"-F"
+            "N":"N",
+            "A":"e_x*10",
+            "-R":"-R"
         }
 
         self.toLog = []
@@ -104,7 +110,9 @@ class PhysObject():
                 value = Vector2(float(value),float(value))
 
             force = force.replace(k,str(value[index]))
-            
+
+        cleared = True
+
         return eval(force)
 
     def force_sum(self):
@@ -112,7 +120,9 @@ class PhysObject():
         forcesY = []
         for k in self.forces:
             if k in forces_standard:    # is premade formula
-                force = forces_standard[k]
+                while k in forces_standard:
+                    force = forces_standard[k]
+                    k = forces_standard[k]
             elif k in userforces:
                 force = userforces[k]
             else:
