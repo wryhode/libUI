@@ -74,26 +74,6 @@ class PhysObject():
         return self.parentworld.mass_density
 
     def parse_force(self,force,direction):
-        # More flexible than replacing but buggy atm
-        # parts = []
-        # separators = ["+","-","*","/"]
-        # part = ""
-        # for c in force:
-        #     if c in separators:
-        #         parts.append(part)
-        #         part = ""
-        #     part += c
-
-        # for k in forces_unit_conversions:
-        #     v = forces_unit_conversions[k].split(".")
-        #     object = self.__dict__[v[0]]
-        #     if object == self.parentworld:
-        #         object = self.parentworld.__dict__[v[1]]
-        #     value = object
-        #     if isinstance(value,int):
-        #         value = Vector2(value)
-        #     force = force.replace(k,str(value))
-
         if direction:
             index = 0   # X
         else:
