@@ -78,10 +78,10 @@ class Application():
             return self.sourceImage.get_size()
             
     class Canvas():
-        def __init__(self,resolution,position,parent):
+        def __init__(self,resolution,position,parent,transparent = False):
             self.rect = pygame.Rect(position,resolution)
             self.parent = parent
-            self.canvas = pygame.Surface(self.resolution)
+            self.canvas = pygame.Surface(self.resolution,pygame.SRCALPHA * transparent)
             if veryVerbose: log(f"CANVAS: New canvas. rect:{self.rect} p:{self.parent}")
             
         def draw(self):
@@ -203,6 +203,16 @@ class Application():
 
         def sizeOf(self,input):
             return self.font.size(str(input))
+
+        def render(self,text,surface,position,color=[255,255,255],alignX=False,alignY=False):
+            size = self.font.size(str(text))
+            position = list(position)
+            if alignX:
+                position[0] -= size[0] / 2
+            if alignY:
+                position[1] -= size[1] / 2
+
+            surface.blit(self.font.render(str(text),True,color),position)
 
     class Text():
         def __init__(self,font,text,color,position,parent):
